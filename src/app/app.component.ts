@@ -12,8 +12,7 @@ export class AppComponent implements AfterViewInit {
   title = 'timer';
   date: any;
   now: any;
-  targetDate: Date = new Date(2024, 9, 26, 8);
-  targetTime: number = this.targetDate.getTime();
+  targetDate: Date = new Date(2024, 10, 23,8);
   difference!: number;
   months: Array<string> = [
     'Janeiro',
@@ -35,38 +34,51 @@ export class AppComponent implements AfterViewInit {
   @ViewChild('minutes', { static: true}) minutes!: ElementRef;
   @ViewChild('seconds', { static: true}) seconds!: ElementRef;
 
+  private lastDisplayed = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+
   ngAfterViewInit() {
-    setInterval(() => {
-      this.tickTock();
-    }, 1000);
+    this.updateCountdown(); // Atualiza inicialmente
+    setInterval(() => this.updateCountdown(), 1000); // Atualiza a cada segundo
   }
 
-  tickTock() {
+  updateCountdown() {
     const now = new Date();
-    console.log(now)
-    this.difference = this.targetDate.getTime() - now.getTime(); // diferença em milissegundos
-  
-   // Se a diferença é negativa, significa que o tempo alvo já passou
-   if (this.difference < 0) {
-    this.days.nativeElement.innerText = '0';
-    this.hours.nativeElement.innerText = '0';
-    this.minutes.nativeElement.innerText = '0';
-    this.seconds.nativeElement.innerText = '0';
-    return;
+    this.difference = this.targetDate.getTime() - now.getTime();
+
+    if (this.difference < 0) {
+      this.displayTime(0, 0, 0, 0);
+      return;
+    }
+
+    // Calcula os valores atuais de dias, horas, minutos e segundos
+    const days = Math.floor(this.difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((this.difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((this.difference % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((this.difference % (1000 * 60)) / 1000);
+
+    // Atualiza apenas se o valor mudou
+    if (days !== this.lastDisplayed.days) {
+      this.days.nativeElement.innerText = days.toString().padStart(2, '0');
+      this.lastDisplayed.days = days;
+    }
+    if (hours !== this.lastDisplayed.hours) {
+      this.hours.nativeElement.innerText = hours.toString().padStart(2, '0');
+      this.lastDisplayed.hours = hours;
+    }
+    if (minutes !== this.lastDisplayed.minutes) {
+      this.minutes.nativeElement.innerText = minutes.toString().padStart(2, '0');
+      this.lastDisplayed.minutes = minutes;
+    }
+    if (seconds !== this.lastDisplayed.seconds) {
+      this.seconds.nativeElement.innerText = seconds.toString().padStart(2, '0');
+      this.lastDisplayed.seconds = seconds;
+    }
   }
 
-   // Calculando dias, horas, minutos e segundos
-   const days = Math.floor(this.difference / (1000 * 60 * 60 * 24));
-   const hours = Math.floor((this.difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-   const minutes = Math.floor((this.difference % (1000 * 60 * 60)) / (1000 * 60));
-   const seconds = Math.floor((this.difference % (1000 * 60)) / 1000);
-
-  
-  // Atualizando os elementos do DOM
-  this.days.nativeElement.innerText = days.toString().padStart(2, '0');
-  this.hours.nativeElement.innerText = hours.toString().padStart(2, '0'); // Para sempre mostrar 2 dígitos
-  this.minutes.nativeElement.innerText = minutes.toString().padStart(2, '0'); // Para sempre mostrar 2 dígitos
-  this.seconds.nativeElement.innerText = seconds.toString().padStart(2, '0'); // Para sempre mostrar 2 dígitos
-
+  displayTime(days: number, hours: number, minutes: number, seconds: number) {
+    this.days.nativeElement.innerText = days.toString().padStart(2, '0');
+    this.hours.nativeElement.innerText = hours.toString().padStart(2, '0');
+    this.minutes.nativeElement.innerText = minutes.toString().padStart(2, '0');
+    this.seconds.nativeElement.innerText = seconds.toString().padStart(2, '0');
   }
 }
