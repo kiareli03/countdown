@@ -1,4 +1,4 @@
-import { Component,ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component,ElementRef, ViewChild } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -8,11 +8,11 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent  {
+export class AppComponent implements AfterViewInit {
   title = 'timer';
   date: any;
   now: any;
-  targetDate: Date = new Date(2024, 10, 23, 8);
+  targetDate: Date = new Date(2024, 9, 26, 8);
   targetTime: number = this.targetDate.getTime();
   difference!: number;
   months: Array<string> = [
@@ -30,18 +30,6 @@ export class AppComponent  {
     'Dezembro',
   ];
 
-  getFormattedTime(date: Date) {
-    const hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, '0'); // Para garantir que sempre tenha 2 dígitos
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const formattedHours = hours % 12 || 12; // Converte de 24h para 12h, ajustando o 0 para 12
-    return `${formattedHours}:${minutes} ${ampm}`;
-  }
-
-  currentTime: any = `${
-    this.months[this.targetDate.getMonth()]
-  } ${this.targetDate.getDate()}, ${this.targetDate.getFullYear()}, ${this.getFormattedTime(this.targetDate)}`;
-
   @ViewChild('days', { static: true }) days!: ElementRef;
   @ViewChild('hours', { static: true }) hours!: ElementRef;
   @ViewChild('minutes', { static: true}) minutes!: ElementRef;
@@ -50,25 +38,35 @@ export class AppComponent  {
   ngAfterViewInit() {
     setInterval(() => {
       this.tickTock();
-      this.difference = this.targetTime - this.now; //data futura(data do evento) menos data atual
-      this.difference = this.difference / (1000 * 60 * 60 * 24); // convertendo milisegundos para dias 
-
-    !isNaN(this.days.nativeElement.innerText)
-      ? (this.days.nativeElement.innerText = Math.floor(this.difference))
-      : (this.days.nativeElement.innerHTML = `<img src="https://i.gifer.com/VAyR.gif" />`);
     }, 1000);
   }
 
   tickTock() {
-    this.date = new Date();
-    this.now = this.date.getTime();
-    this.days.nativeElement.innerText = Math.floor(this.difference);
-    this.hours.nativeElement.innerText = 23 - this.targetDate.getHours();
-    this.minutes.nativeElement.innerText = 59 - this.date.getMinutes();
-    this.seconds.nativeElement.innerText = 59 - this.date.getSeconds();
+    const now = new Date();
+    console.log(now)
+    this.difference = this.targetDate.getTime() - now.getTime(); // diferença em milissegundos
+  
+   // Se a diferença é negativa, significa que o tempo alvo já passou
+   if (this.difference < 0) {
+    this.days.nativeElement.innerText = '0';
+    this.hours.nativeElement.innerText = '0';
+    this.minutes.nativeElement.innerText = '0';
+    this.seconds.nativeElement.innerText = '0';
+    return;
   }
-}
+
+   // Calculando dias, horas, minutos e segundos
+   const days = Math.floor(this.difference / (1000 * 60 * 60 * 24));
+   const hours = Math.floor((this.difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+   const minutes = Math.floor((this.difference % (1000 * 60 * 60)) / (1000 * 60));
+   const seconds = Math.floor((this.difference % (1000 * 60)) / 1000);
 
   
+  // Atualizando os elementos do DOM
+  this.days.nativeElement.innerText = days.toString().padStart(2, '0');
+  this.hours.nativeElement.innerText = hours.toString().padStart(2, '0'); // Para sempre mostrar 2 dígitos
+  this.minutes.nativeElement.innerText = minutes.toString().padStart(2, '0'); // Para sempre mostrar 2 dígitos
+  this.seconds.nativeElement.innerText = seconds.toString().padStart(2, '0'); // Para sempre mostrar 2 dígitos
 
-
+  }
+}
